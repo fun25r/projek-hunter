@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+/* =============================================
+   HUNTER BOTTLE — 60-30-10 Color System
+   60% Dominant: White (light) / Black (dark)
+   30% Secondary: Slate Gray (#1F2937 / #E5E7EB)
+   10% Accent: Amber Gold (#D97706 / #B45309)
+   Golden Ratio: 1.618
+   Spacing Scale: 0.618rem base
+   ============================================= */
+
+/* === LIGHT MODE (default) === */
+:root {
+  --color-bg: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-border: #E5E7EB;
+  --color-text: #111827;
+  --color-text-muted: #6B7280;
+  --color-accent: #D97706;
+  --color-accent-hover: #B45309;
+  --color-accent-bg: rgba(217, 119, 6, 0.08);
+  --color-success: #059669;
+  --color-error: #DC2626;
+  --radius-sm: 0.618rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.618rem;
+}
+
+/* === DARK MODE === */
+.dark {
+  --color-bg: #0A0A0A;
+  --color-surface: #111827;
+  --color-border: #1F2937;
+  --color-text: #F9FAFB;
+  --color-text-muted: #9CA3AF;
+  --color-accent: #F59E0B;
+  --color-accent-hover: #D97706;
+  --color-accent-bg: rgba(245, 158, 11, 0.12);
+  --color-success: #10B981;
+  --color-error: #EF4444;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Animations === */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-in {
+  animation: fadeInUp 0.3s ease-out;
+}
+.modal-backdrop {
+  animation: fadeIn 0.2s ease-out;
+}
+.drawer-in {
+  animation: slideInRight 0.25s ease-out;
+}
+
+/* === Skeleton pulse === */
+.skeleton {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* === Scrollbar styling === */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+/* === Brand Logos Scroll Animation === */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-scroll {
+  animation: scroll 30s linear infinite;
+  width: max-content;
+}
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+

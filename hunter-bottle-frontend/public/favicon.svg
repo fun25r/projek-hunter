@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <style>
+    .gold { fill: #E5A93C; }
+    .white { fill: #FFFFFF; }
+    .text-main { font-family: 'Impact', 'Arial Black', sans-serif; font-size: 52px; fill: #FFFFFF; letter-spacing: 3px; }
+    .text-sub { font-family: 'Arial', sans-serif; font-weight: bold; font-size: 16px; fill: #FFFFFF; }
+  </style>
+
+  <g transform="translate(400, 300)">
+    {/* Elemen Target Bidik Atas */}
+    <circle cx="0" cy="-110" r="28" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+    <circle cx="0" cy="-110" r="14" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.7"/>
+    <line x1="-38" y1="-110" x2="38" y2="-110" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+    <line x1="0" y1="-148" x2="0" y2="-72" stroke="#FFFFFF" stroke-width="2" opacity="0.7"/>
+
+    {/* Perisai Tengah */}
+    <path d="M -70,-50 L 70,-50 C 70,30 50,110 0,140 C -50,110 -70,30 -70,-50 Z" fill="#0A0A0A" stroke="#FFFFFF" stroke-width="6" />
+    <line x1="0" y1="-40" x2="0" y2="130" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="6,6" opacity="0.5" />
+
+    {/* Gelas Bir Kiri */}
+    <g transform="translate(-28, 45) rotate(-10)">
+      <rect x="-22" y="-35" width="44" height="65" rx="8" class="gold" />
+      <rect x="-16" y="-28" width="32" height="52" rx="4" fill="#C68B23" />
+      <path d="M -22,-15 C -35,-15 -35,15 -22,15" fill="none" stroke="#E5A93C" stroke-width="7" stroke-linecap="round" />
+      <path d="M -26,-33 C -26,-45 -10,-48 -5,-38 C 0,-48 15,-45 20,-38 C 25,-42 30,-30 24,-30 C -5,-30 -20,-30 -26,-33 Z" class="white" />
+    </g>
+
+    {/* Gelas Bir Kanan */}
+    <g transform="translate(28, 45) rotate(10)">
+      <rect x="-22" y="-35" width="44" height="65" rx="8" class="gold" />
+      <rect x="-16" y="-28" width="32" height="52" rx="4" fill="#C68B23" />
+      <path d="M 22,-15 C 35,-15 35,15 22,15" fill="none" stroke="#E5A93C" stroke-width="7" stroke-linecap="round" />
+      <path d="M -24,-30 C -30,-30 -25,-42 -20,-38 C -15,-45 0,-48 5,-38 C 10,-48 26,-45 26,-33 C 20,-30 5,-30 -24,-30 Z" class="white" />
+    </g>
+
+    {/* Pistol & Sayap Kiri */}
+    <g transform="translate(-140, 20)">
+      <path d="M 0,-40 C -60,-80 -120,-40 -150,20 C -100,20 -60,0 0,0" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+      <path d="M -10,-20 C -60,-50 -110,-20 -130,30 C -90,20 -50,10 -10,0" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.7"/>
+      <path d="M -20,0 C -60,-20 -100,0 -110,40 C -80,20 -40,15 -20,0" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.6"/>
+      <g transform="rotate(25) translate(-20,-30)">
+        <rect x="-60" y="-12" width="90" height="20" fill="#E6E6E6" rx="3" />
+        <rect x="-10" y="-14" width="35" height="24" fill="#CCCCCC" />
+        <path d="M 20,5 L 45,35 L 25,45 L 10,10 Z" fill="#999999" />
+        <path d="M -65,-2 C -90,-20 -100,-5 -130,-15 C -100,5 -85,5 -65,-2" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.5" />
+      </g>
+    </g>
+
+    {/* Pistol & Sayap Kanan */}
+    <g transform="translate(140, 20) scale(-1, 1)">
+      <path d="M 0,-40 C -60,-80 -120,-40 -150,20 C -100,20 -60,0 0,0" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+      <path d="M -10,-20 C -60,-50 -110,-20 -130,30 C -90,20 -50,10 -10,0" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.7"/>
+      <path d="M -20,0 C -60,-20 -100,0 -110,40 C -80,20 -40,15 -20,0" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.6"/>
+      <g transform="rotate(25) translate(-20,-30)">
+        <rect x="-60" y="-12" width="90" height="20" fill="#E6E6E6" rx="3" />
+        <rect x="-10" y="-14" width="35" height="24" fill="#CCCCCC" />
+        <path d="M 20,5 L 45,35 L 25,45 L 10,10 Z" fill="#999999" />
+        <path d="M -65,-2 C -90,-20 -100,-5 -130,-15 C -100,5 -85,5 -65,-2" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.5" />
+      </g>
+    </g>
+
+    {/* Pita Banner */}
+    <path d="M -160,110 L -80,100 L 0,125 L 80,100 L 160,110 L 140,150 L 0,165 L -140,150 Z" fill="#1A1A1A" stroke="#FFFFFF" stroke-width="4" />
+    <path d="M -60,150 L 0,135 L 60,150 L 40,185 L 0,175 L -40,185 Z" fill="#111111" stroke="#FFFFFF" stroke-width="3" />
+
+    {/* Teks Atas Melengkung */}
+    <path id="hunter-path" d="M -220,-110 Q 0,-185 220,-110" fill="none" stroke="transparent" />
+    <text class="text-main">
+      <textPath href="#hunter-path" startOffset="50%" text-anchor="middle">HUNTER</textPath>
+    </text>
+
+    {/* Teks Sub-Banner */}
+    <text x="-105" y="132" class="text-sub" text-anchor="middle">BEER</text>
+    <text x="0" y="163" class="text-sub" text-anchor="middle">AND</text>
+    <text x="105" y="132" class="text-sub" text-anchor="middle">CAFE</text>
+  </g>
+</svg>
