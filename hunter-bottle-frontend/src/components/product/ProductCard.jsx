@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, Check } from 'lucide-react';
 import { useCart } from '../../contexts/CartContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { imageUrl } from '../../utils/formatRupiah';
 
 export default function ProductCard({ product, onQuickView }) {
   const { addItem, updateQuantity, removeItem, items } = useCart();
@@ -62,7 +63,7 @@ export default function ProductCard({ product, onQuickView }) {
       <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden cursor-pointer" onClick={() => onQuickView?.(product)}>
         {product.image_url && !imgError ? (
           <img
-            src={`${backendUrl}/storage/${product.image_url}`}
+            src={imageUrl(product.image_url)}
             alt={product.name}
             onError={() => setImgError(true)}
             className="w-full h-full object-cover group-hover:scale-105 transition duration-700"

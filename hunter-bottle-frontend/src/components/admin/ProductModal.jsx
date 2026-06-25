@@ -3,6 +3,7 @@ import {
   X, Save, Upload, ImageIcon, Package, Tag,
 } from 'lucide-react';
 import { adminCreateProduct, adminUpdateProduct } from '../../services/api';
+import { imageUrl } from '../../utils/formatRupiah';
 
 const CATEGORIES = ['Red Wine', 'White Wine', 'Champagne', 'Whisky', 'Vodka', 'Rum', 'Liqueur', 'Gin', 'Tequila', 'Brandy', 'Sake', 'Soju', 'Beer'];
 
@@ -63,8 +64,8 @@ export default function ProductModal({ product, onClose, onSaved }) {
         is_active: product.is_active ?? true,
       });
       if (product.image_url) {
-        setExistingImage(`${backendUrl}/storage/${product.image_url}`);
-        setImagePreview(`${backendUrl}/storage/${product.image_url}`);
+        setExistingImage(imageUrl(product.image_url));
+        setImagePreview(imageUrl(product.image_url));
       }
     }
   }, [product]);

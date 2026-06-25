@@ -57,6 +57,9 @@ export const adminCreateBanner = (formData) => api.post('/admin/banners', formDa
 export const adminUpdateBanner = (id, formData) => { formData.append('_method', 'PUT'); return api.post(`/admin/banners/${id}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }); };
 export const adminDeleteBanner = (id) => api.delete(`/admin/banners/${id}`);
 
+export const adminGetReports = (startDate, endDate) =>
+  api.get('/admin/reports', { params: { start_date: startDate, end_date: endDate } });
+
 export const adminGetAnalytics = (params) => api.get('/admin/analytics', { params });
 export const adminCalculateBestsellers = () => api.post('/admin/analytics/calculate-bestsellers');
 

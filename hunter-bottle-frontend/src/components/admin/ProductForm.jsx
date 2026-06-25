@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { adminCreateProduct, adminUpdateProduct } from '../../services/api';
 import { Upload, X, Save, ImageIcon } from 'lucide-react';
+import { imageUrl } from '../../utils/formatRupiah';
 
 export default function ProductForm({ product, onSave, onCancel }) {
   const isEdit = !!product;
@@ -20,7 +21,7 @@ export default function ProductForm({ product, onSave, onCancel }) {
   const [newCollectionExpiresAt, setNewCollectionExpiresAt] = useState(product?.new_collection_expires_at ? product.new_collection_expires_at.slice(0, 16) : '');
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(
-    product?.image_url ? `${backendUrl}/storage/${product.image_url}` : null
+    product?.image_url ? imageUrl(product.image_url) : null
   );
   const [isFeatured, setIsFeatured] = useState(product?.is_featured || false);
   const [isBestseller, setIsBestseller] = useState(product?.is_bestseller || false);

@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useCart } from '../../contexts/CartContext';
-import { getProvinces, getCities, getSubdistricts, getShippingCost } from '../../services/api';
-import { ChevronDown, Truck, Store } from 'lucide-react';
+import { getShippingCost } from '../../services/api';
+import { Truck, Store } from 'lucide-react';
+
+const COURIERS = [
+  { code: 'gojek', name: 'Gojek', color: '#00AA13', logo: 'Gojek' },
+  { code: 'grab', name: 'Grab', color: '#00B14F', logo: 'Grab' },
+  { code: 'shopee', name: 'Shopee', color: '#EE4D2D', logo: 'Shopee' },
+];
 
 export default function StepShipping({ onNext }) {
   const { totalWeight, note, setOrderNote } = useCart();
@@ -11,14 +17,8 @@ export default function StepShipping({ onNext }) {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [postalCode, setPostalCode] = useState('');
-
-  const [provinces, setProvinces] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [subdistricts, setSubdistricts] = useState([]);
-  const [selectedProvince, setSelectedProvince] = useState({ id: '', name: '' });
-  const [selectedCity, setSelectedCity] = useState({ id: '', name: '' });
-  const [selectedSubdistrict, setSelectedSubdistrict] = useState({ id: '', name: '' });
+  const [destLat, setDestLat] = useState('');
+  const [destLng, setDestLng] = useState('');
 
   const [courier, setCourier] = useState('');
   const [services, setServices] = useState([]);
@@ -27,64 +27,62 @@ export default function StepShipping({ onNext }) {
   const [loadingCost, setLoadingCost] = useState(false);
   const [error, setError] = useState('');
 
-  const COURIERS = ['jne', 'pos', 'tiki'];
-
-  useEffect(() => {
-    getProvinces()
-      .then(({ data }) => setProvinces(data?.rajaongkir?.results || []))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!selectedProvince.id) return;
-    getCities(selectedProvince.id)
-      .then(({ data }) => {
-        setCities(data?.rajaongkir?.results || []);
-        setSelectedCity({ id: '', name: '' });
-        setSubdistricts([]);
-        setServices([]);
-        setSelectedService('');
-      })
-      .catch(() => {});
-  }, [selectedProvince.id]);
-
-  useEffect(() => {
-    if (!selectedCity.id) return;
-    getSubdistricts(selectedCity.id)
-      .then(({ data }) => setSubdistricts(data?.rajaongkir?.results || []))
-      .catch(() => {});
-  }, [selectedCity.id]);
-
   const calculateCost = useCallback(() => {
-    if (!selectedCity.id || !courier || !totalWeight) return;
+    if (!destLat || !destLng || !courier || !totalWeight) return;
     setLoadingCost(true);
     setError('');
-    getShippingCost({
-      destination_city_id: selectedCity.id,
-      weight_gram: totalWeight || 1000,
-      courier,
-    })
-      .then(({ data }) => setServices(data?.rajaongkir?.results?.[0]?.costs || []))
-      .catch(() => setError('Gagal menghitung ongkos kirim. Coba kurir lain.'))
-      .finally(() => setLoadingCost(false));
-  }, [selectedCity.id, courier, totalWeight]);
+    setSelectedService('');
+    setServices([]);
+    setShippingCost(0);
 
-  useEffect(() => { calculateCost(); }, [calculateCost]);
+    getShippingCost({
+      courier,
+      destination_lat: parseFloat(destLat),
+      destination_lng: parseFloat(destLng),
+      weight: totalWeight || 1000,
+      value: 100000,
+    })
+      .then(({ data }) => {
+        const result = data?.rajaongkir?.results?.[0];
+        if (result?.costs?.length) {
+          setServices(result.costs);
+        } else {
+          setError('Tidak ada layanan tersedia untuk kurir ini. Coba kurir lain.');
+        }
+      })
+      .catch((err) => {
+        const msg = err?.response?.data?.message || 'Gagal menghitung ongkir. Coba lagi.';
+        setError(msg);
+      })
+      .finally(() => setLoadingCost(false));
+  }, [destLat, destLng, courier, totalWeight]);
+
+  useEffect(() => {
+    if (courier && destLat && destLng) calculateCost();
+  }, [courier]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError('');
+
     if (!customerName || !customerPhone) {
       setError('Nama dan nomor telepon wajib diisi'); return;
     }
-    if (deliveryType === 'shipping' && (!selectedCity.id || !address)) {
-      setError('Alamat dan kota tujuan wajib diisi'); return;
+    if (deliveryType === 'shipping') {
+      if (!address || !destLat || !destLng) {
+        setError('Alamat lengkap dan koordinat wajib diisi untuk pengiriman.'); return;
+      }
+      if (!selectedService) {
+        setError('Pilih layanan kurir terlebih dahulu.'); return;
+      }
     }
+
     onNext({
       customerName, customerEmail, customerPhone,
-      deliveryType, address, postalCode,
-      province: selectedProvince.name,
-      city: selectedCity.name,
-      subdistrict: selectedSubdistrict.name,
+      deliveryType,
+      shippingAddress: address,
+      destination_lat: parseFloat(destLat),
+      destination_lng: parseFloat(destLng),
       courier, courierService: selectedService,
       shippingCost,
     });
@@ -94,21 +92,24 @@ export default function StepShipping({ onNext }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Informasi Pengiriman</h2>
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Informasi Pengiriman</h2>
 
       {/* Delivery Type */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         {[
-          { key: 'shipping', icon: Truck, label: 'Dikirim', sub: '(JNE / POS / TIKI)' },
-          { key: 'pickup', icon: Store, label: 'Ambil di Toko', sub: '(Bayar di Tempat)' },
+          { key: 'shipping', icon: Truck, label: 'Dikirim', sub: '(Gojek / Grab / Shopee Instant)' },
+          { key: 'pickup', icon: Store, label: 'Ambil di Toko', sub: '(Bayar di Tempat — COD)' },
         ].map((opt) => (
           <button key={opt.key} type="button" onClick={() => { setDeliveryType(opt.key); setError(''); }}
             className={`p-4 rounded-xl border-2 text-left transition-all ${
-              deliveryType === opt.key ? 'border-red-800 bg-red-50 shadow-sm' : 'border-gray-200 hover:border-gray-300'
-            }`}>
-            <opt.icon size={24} className={deliveryType === opt.key ? 'text-red-800' : 'text-gray-400'} />
-            <p className="font-semibold text-sm mt-2">{opt.label}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{opt.sub}</p>
+              deliveryType === opt.key
+                ? 'border-red-800 bg-red-50 dark:bg-red-900/20 shadow-sm'
+                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
+          >
+            <opt.icon size={24} className={deliveryType === opt.key ? 'text-red-800 dark:text-red-400' : 'text-gray-400'} />
+            <p className="font-semibold text-sm mt-2 dark:text-white">{opt.label}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{opt.sub}</p>
           </button>
         ))}
       </div>
@@ -116,19 +117,19 @@ export default function StepShipping({ onNext }) {
       {/* Customer Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Nama *</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Nama *</label>
           <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" placeholder="Nama lengkap" />
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm dark:text-white dark:bg-gray-800 focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" placeholder="Nama lengkap" />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Email</label>
           <input type="email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" placeholder="email@contoh.com" />
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm dark:text-white dark:bg-gray-800 focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" placeholder="email@contoh.com" />
         </div>
         <div className="md:col-span-2">
-          <label className="block text-sm font-semibold text-gray-700 mb-1">No. Telepon / WA *</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">No. Telepon / WA *</label>
           <input type="tel" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" placeholder="08123456789" />
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm dark:text-white dark:bg-gray-800 focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" placeholder="08123456789" />
         </div>
       </div>
 
@@ -136,74 +137,86 @@ export default function StepShipping({ onNext }) {
       {deliveryType === 'shipping' && (
         <>
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Alamat Lengkap *</label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Alamat Lengkap *</label>
             <textarea value={address} onChange={e => setAddress(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" rows={2}
-              placeholder="Jl. Contoh No. 123, RT/RW, Kelurahan..." />
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm dark:text-white dark:bg-gray-800 focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" rows={2}
+              placeholder="Jl. Contoh No. 123, RT/RW, Kelurahan, Kecamatan, Kota, Provinsi" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-            <SelectField label="Provinsi" value={selectedProvince.name} disabled={!provinces.length}
-              onChange={(id, name) => { setSelectedProvince({ id, name }); }}>
-              {provinces.map((p) => (
-                <option key={p.province_id} value={`${p.province_id}|${p.province}`}>{p.province}</option>
-              ))}
-            </SelectField>
-            <SelectField label="Kota/Kabupaten" value={selectedCity.name} disabled={!selectedProvince.id}
-              onChange={(id, name) => { setSelectedCity({ id, name }); }}>
-              {cities.map((c) => (
-                <option key={c.city_id} value={`${c.city_id}|${c.city_name}`}>{c.type} {c.city_name}</option>
-              ))}
-            </SelectField>
-            <SelectField label="Kecamatan" value={selectedSubdistrict.name} disabled={!selectedCity.id}
-              onChange={(id, name) => { setSelectedSubdistrict({ id, name }); }}>
-              {subdistricts.map((s) => (
-                <option key={s.subdistrict_id} value={`${s.subdistrict_id}|${s.subdistrict_name}`}>{s.subdistrict_name}</option>
-              ))}
-            </SelectField>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Latitude *</label>
+              <input type="text" value={destLat} onChange={e => { setDestLat(e.target.value); setServices([]); }}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm dark:text-white dark:bg-gray-800 focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition font-mono" placeholder="-6.2415" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Longitude *</label>
+              <input type="text" value={destLng} onChange={e => { setDestLng(e.target.value); setServices([]); }}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm dark:text-white dark:bg-gray-800 focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition font-mono" placeholder="106.5285" />
+            </div>
           </div>
 
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-4 -mt-2">
+            Buka Google Maps, klik kanan di lokasi tujuan, pilih &quot;What&apos;s here?&quot; untuk melihat koordinat.
+          </p>
+
+          {/* Courier Selection */}
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Kode Pos</label>
-            <input type="text" value={postalCode} onChange={e => setPostalCode(e.target.value)}
-              className="w-full md:w-40 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" placeholder="164xx" />
-          </div>
-
-          {/* Courier */}
-          <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Pilih Kurir</label>
-            <div className="flex gap-2">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Pilih Kurir Instant/Express</label>
+            <div className="grid grid-cols-3 gap-2">
               {COURIERS.map((c) => (
-                <button key={c} type="button"
-                  onClick={() => { setCourier(c); setSelectedService(''); setServices([]); }}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-bold uppercase transition border-2 ${
-                    courier === c ? 'border-red-800 bg-red-50 text-red-800' : 'border-gray-200 text-gray-400 hover:border-gray-300'
-                  }`}>{c}</button>
+                <button key={c.code} type="button"
+                  onClick={() => { setCourier(c.code); setSelectedService(''); setServices([]); }}
+                  className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-bold transition border-2 ${
+                    courier === c.code
+                      ? 'border-red-800 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400 shadow-sm'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <span style={{ color: courier === c.code ? undefined : c.color }}
+                    className={`text-lg font-extrabold tracking-tight ${courier === c.code ? 'text-red-800 dark:text-red-400' : ''}`}
+                  >
+                    {c.logo}
+                  </span>
+                  <span className="text-[11px]">{c.name}</span>
+                </button>
               ))}
             </div>
           </div>
 
+          {/* Loading */}
+          {loadingCost && (
+            <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 mb-4">
+              <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+              Menghitung ongkir via Biteship...
+            </div>
+          )}
+
           {/* Services */}
-          {loadingCost && <p className="text-sm text-gray-400 animate-pulse">Menghitung ongkir...</p>}
-          {services.length > 0 && (
+          {!loadingCost && services.length > 0 && (
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Layanan Tersedia</label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Layanan Tersedia</label>
               <div className="space-y-2">
-                {services.map((s) => (
-                  <label key={s.service}
+                {services.map((s, idx) => (
+                  <label key={idx}
                     className={`flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition ${
-                      selectedService === s.service ? 'border-red-800 bg-red-50' : 'border-gray-200 hover:border-gray-300'
-                    }`}>
+                      selectedService === s.service
+                        ? 'border-red-800 bg-red-50 dark:bg-red-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
                     <div className="flex items-center gap-3">
                       <input type="radio" name="service" value={s.service} checked={selectedService === s.service}
-                        onChange={() => { setSelectedService(s.service); setShippingCost(s.cost[0]?.value || 0); }}
+                        onChange={() => { setSelectedService(s.service); setShippingCost(s.cost?.[0]?.value || 0); }}
                         className="accent-red-800" />
                       <div>
-                        <p className="font-semibold text-sm">{s.service}</p>
-                        <p className="text-xs text-gray-500">{s.description} · Estimasi {s.cost[0]?.etd || '-'} hari</p>
+                        <p className="font-semibold text-sm dark:text-white">{s.description || s.service}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Estimasi {s.cost?.[0]?.etd || '1-2 jam'} · Via Biteship
+                        </p>
                       </div>
                     </div>
-                    <span className="font-bold text-sm ml-4">{formatRupiah(s.cost[0]?.value)}</span>
+                    <span className="font-bold text-sm ml-4 dark:text-white">{formatRupiah(s.cost?.[0]?.value || 0)}</span>
                   </label>
                 ))}
               </div>
@@ -214,40 +227,20 @@ export default function StepShipping({ onNext }) {
 
       {/* Note */}
       <div className="mb-8">
-        <label className="block text-sm font-semibold text-gray-700 mb-1">Catatan Pesanan</label>
+        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Catatan Pesanan</label>
         <textarea value={note} onChange={e => setOrderNote(e.target.value)}
-          className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" rows={2}
+          className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm dark:text-white dark:bg-gray-800 focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition" rows={2}
           placeholder="Contoh: Tolong dibungkus kado..." />
       </div>
 
-      {error && <p className="bg-red-50 text-red-700 text-sm p-3 rounded-xl mb-4">{error}</p>}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-400 text-sm p-3 rounded-xl mb-4">{error}</div>
+      )}
 
       <button type="submit"
         className="w-full py-3.5 bg-red-800 text-white rounded-xl font-semibold hover:bg-red-900 active:scale-[0.99] transition-all shadow-lg shadow-red-800/20">
         Lanjut ke Review
       </button>
     </form>
-  );
-}
-
-function SelectField({ label, value, disabled, onChange, children }) {
-  return (
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>
-      <div className="relative">
-        <select
-          disabled={disabled}
-          value={value || ''}
-          onChange={(e) => {
-            const [id, name] = e.target.value.split('|');
-            if (onChange) onChange(id, name);
-          }}
-          className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm appearance-none bg-white disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-red-800/20 focus:border-red-800 outline-none transition">
-          <option value="">Pilih {label}</option>
-          {children}
-        </select>
-        <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-      </div>
-    </div>
   );
 }

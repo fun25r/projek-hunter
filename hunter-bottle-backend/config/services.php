@@ -56,6 +56,14 @@ return [
         'is_sandbox' => env('MIDTRANS_SANDBOX', true),
     ],
 
+    'biteship' => [
+        'api_key' => env('BITESHIP_API_KEY'),
+        'base_url' => env('BITESHIP_BASE_URL', 'https://api.biteship.com'),
+        'origin_latitude' => env('SHOP_ORIGIN_LATITUDE', '-6.2415'),
+        'origin_longitude' => env('SHOP_ORIGIN_LONGITUDE', '106.5285'),
+        'origin_address' => env('SHOP_ORIGIN_ADDRESS', 'Samanea Kuliner Junction, Jl. Suvarna Sutera Boulevard C19-20, Pasir Gadung, Cikupa, Tangerang, Banten, 15710'),
+    ],
+
     'store' => [
         'whatsapp_number' => env('STORE_WHATSAPP_NUMBER'),
         'name' => env('STORE_NAME', 'Hunter Bottle'),

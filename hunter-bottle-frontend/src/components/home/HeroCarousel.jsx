@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getBanners } from '../../services/api';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { imageUrl } from '../../utils/formatRupiah';
 
 export default function HeroCarousel() {
   const [banners, setBanners] = useState([]);
@@ -43,7 +44,7 @@ export default function HeroCarousel() {
         {/* Image */}
         {banner.image_url ? (
           <img
-            src={`${backendUrl}/storage/${banner.image_url}`}
+            src={imageUrl(banner.image_url)}
             alt={banner.title}
             className="w-full h-[280px] md:h-[400px] object-cover"
           />

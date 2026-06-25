@@ -1,6 +1,7 @@
 import { X, ShoppingCart, Plus, Minus, Check } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCart } from '../../contexts/CartContext';
+import { imageUrl } from '../../utils/formatRupiah';
 
 export default function QuickView({ product, onClose }) {
   const { addItem, updateQuantity, removeItem, items } = useCart();
@@ -64,7 +65,7 @@ export default function QuickView({ product, onClose }) {
           {/* Image */}
           <div className="aspect-square bg-gray-50 dark:bg-gray-700 rounded-2xl overflow-hidden">
             {product.image_url ? (
-              <img src={`${backendUrl}/storage/${product.image_url}`} alt={product.name}
+              <img src={imageUrl(product.image_url)} alt={product.name}
                 className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-500">

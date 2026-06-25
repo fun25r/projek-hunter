@@ -4,12 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Service\FirebaseStorageService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
+    private FirebaseStorageService $firebaseStorage;
+
+    public function __construct(FirebaseStorageService $firebaseStorage)
+    {
+        $this->firebaseStorage = $firebaseStorage;
+    }
+
     public function index(Request $request)
     {
         $query = Product::query();
@@ -54,8 +61,18 @@ class ProductController extends Controller
 
         $data['slug'] = Str::slug($request->name) . '-' . Str::random(4);
 
-        if ($request->hasFile('image')) {
-            $data['image_url'] = $request->file('image')->store('products', 'public');
+        try {
+            if ($request->hasFile('image')) {
+                $data['image_url'] = $this->firebaseStorage->upload(
+                    $request->file('image'),
+                    'products'
+                );
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal mengupload gambar ke Firebase Storage.',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
 
         $data['stock_status'] = match (true) {
@@ -108,10 +125,20 @@ class ProductController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            if ($product->image_url) {
-                Storage::disk('public')->delete($product->image_url);
+            try {
+                if ($product->image_url) {
+                    $this->firebaseStorage->deleteByUrl($product->image_url);
+                }
+                $data['image_url'] = $this->firebaseStorage->upload(
+                    $request->file('image'),
+                    'products'
+                );
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => 'Gagal mengupload gambar ke Firebase Storage.',
+                    'error'   => $e->getMessage(),
+                ], 500);
             }
-            $data['image_url'] = $request->file('image')->store('products', 'public');
         }
 
         if ($request->has('stock_count')) {
@@ -135,7 +162,10 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         if ($product->image_url) {
-            Storage::disk('public')->delete($product->image_url);
+            try {
+                $this->firebaseStorage->deleteByUrl($product->image_url);
+            } catch (\Exception $e) {
+            }
         }
 
         $product->delete();

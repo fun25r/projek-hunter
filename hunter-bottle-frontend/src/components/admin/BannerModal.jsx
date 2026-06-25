@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Save, Upload, ImageIcon, Tag, ToggleLeft, ToggleRight } from 'lucide-react';
 import { adminCreateBanner, adminUpdateBanner } from '../../services/api';
+import { imageUrl } from '../../utils/formatRupiah';
 
 export default function BannerModal({ banner, onClose, onSaved }) {
   const isEdit = !!banner;
@@ -30,7 +31,7 @@ export default function BannerModal({ banner, onClose, onSaved }) {
       setSortOrder(banner.sort_order ?? 0);
       setIsActive(banner.is_active ?? true);
       if (banner.image_url) {
-        const fullUrl = `${backendUrl}/storage/${banner.image_url}`;
+        const fullUrl = imageUrl(banner.image_url);
         setExistingImage(fullUrl);
         setImagePreview(fullUrl);
       }

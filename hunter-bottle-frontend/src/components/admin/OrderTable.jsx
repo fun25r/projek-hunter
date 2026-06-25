@@ -10,8 +10,8 @@ export default function OrderTable({ orders, loading, onRefresh, isAdmin }) {
   const [updating, setUpdating] = useState(null);
   const [showVerification, setShowVerification] = useState(false);
   const [pendingChange, setPendingChange] = useState(null);
-  const [expanded, setExpanded] = useState(null); // order id yg di-expand
-  const [checks, setChecks] = useState({}); // local checkbox state per item
+  const [expanded, setExpanded] = useState(null);
+  const [checks, setChecks] = useState({});
 
   const executeStatusUpdate = async (orderId, newStatus) => {
     setUpdating(orderId);
@@ -81,7 +81,6 @@ export default function OrderTable({ orders, loading, onRefresh, isAdmin }) {
           const isExpanded = expanded === order.id;
           return (
             <div key={order.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-              {/* Row Header */}
               <div className="p-4 flex flex-wrap items-center gap-3">
                 <button onClick={() => setExpanded(isExpanded ? null : order.id)}
                   className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-gray-400">
@@ -107,10 +106,8 @@ export default function OrderTable({ orders, loading, onRefresh, isAdmin }) {
                 )}
               </div>
 
-              {/* Expanded Detail */}
               {isExpanded && (
                 <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-4 bg-gray-50 dark:bg-gray-800/50">
-                  {/* Customer Info */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 text-xs">
                     <div><span className="text-gray-400">Pelanggan:</span> <span className="font-semibold text-gray-800 dark:text-gray-200">{order.customer_name}</span></div>
                     <div><span className="text-gray-400">Telepon:</span> <span className="font-semibold text-gray-800 dark:text-gray-200">{order.customer_phone}</span></div>
@@ -131,7 +128,6 @@ export default function OrderTable({ orders, loading, onRefresh, isAdmin }) {
                     )}
                   </div>
 
-                  {/* Order Items */}
                   <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">Item Pesanan</h4>
                   <div className="space-y-2 mb-4">
                     {order.items?.map((item) => {
@@ -155,10 +151,9 @@ export default function OrderTable({ orders, loading, onRefresh, isAdmin }) {
                     })}
                   </div>
 
-                  {/* Action: Pesanan Siap */}
                   <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
                     <span className="text-xs text-gray-400">
-                      {allItemsChecked(order) ? '✅ Semua item siap' : `⚠️ Centang ${order.items?.filter(i => { const k = `${order.id}-${i.id}`; return !(checks[k] !== undefined ? checks[k] : i.is_checked); }).length || order.items?.length} item lagi`}
+                      {allItemsChecked(order) ? 'Semua item siap' : `Centang ${order.items?.filter(i => { const k = `${order.id}-${i.id}`; return !(checks[k] !== undefined ? checks[k] : i.is_checked); }).length || order.items?.length} item lagi`}
                     </span>
                     <button onClick={() => handleMarkReady(order)}
                       disabled={!allItemsChecked(order) || updating === order.id}

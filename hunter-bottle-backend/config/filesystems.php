@@ -60,6 +60,14 @@ return [
             'report' => false,
         ],
 
+        'firebase' => [
+            'driver' => 'firebase',
+            'credentials_path' => env('FIREBASE_CREDENTIALS_PATH', storage_path('app/firebase/credentials.json')),
+            'bucket' => env('FIREBASE_STORAGE_BUCKET', 'hunter-bottle.firebasestorage.app'),
+            'url' => sprintf('https://storage.googleapis.com/%s', env('FIREBASE_STORAGE_BUCKET', 'hunter-bottle.firebasestorage.app')),
+            'throw' => false,
+        ],
+
     ],
 
     /*

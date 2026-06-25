@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { imageUrl } from '../utils/formatRupiah';
 import {
   adminGetProducts, adminGetOrders, adminDeleteProduct,
   adminGetBanners, adminCreateBanner, adminUpdateBanner, adminDeleteBanner,
@@ -107,14 +108,12 @@ export default function AdminDashboardPage() {
   ];
   const tabs = allTabs.filter(t => !t.adminOnly || isAdmin);
 
-  // Force non-admin to valid tabs
   if (!tabs.find(t => t.key === tab)) {
     setTab('analytics');
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
-      {/* Header */}
       <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -137,7 +136,6 @@ export default function AdminDashboardPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-4">
-        {/* Tabs */}
         <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6 overflow-x-auto">
           {tabs.map((t) => (
             <button key={t.key} onClick={() => { setTab(t.key); setShowProductForm(false); setShowBannerForm(false); }}
@@ -147,7 +145,6 @@ export default function AdminDashboardPage() {
           ))}
         </div>
 
-        {/* ===== ANALYTICS ===== */}
         {tab === 'analytics' && (
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -159,7 +156,6 @@ export default function AdminDashboardPage() {
               {isAdmin && <button onClick={handleCalcBestsellers} className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-xl text-sm font-semibold hover:bg-amber-700 transition"><RefreshCw size={14} /> Hitung Bestseller</button>}
             </div>
 
-            {/* Date Range Filter */}
             <div className="flex flex-wrap items-center gap-3 mb-6 bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
               <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Filter Tanggal</span>
               <div className="flex items-center gap-2">
@@ -215,10 +211,8 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* ===== ORDERS ===== */}
         {tab === 'orders' && <OrderTable orders={orders} loading={loading} onRefresh={fetchData} isAdmin={isAdmin} />}
 
-        {/* ===== PRODUCTS (Admin only) ===== */}
         {tab === 'products' && isAdmin && (
           <>
             <div className="flex items-center gap-3 mb-4">
@@ -231,7 +225,7 @@ export default function AdminDashboardPage() {
             : <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{products.map((p) => (
               <div key={p.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 flex gap-4 hover:shadow-md transition">
                 <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-xl flex-shrink-0 overflow-hidden cursor-pointer" onClick={() => { setEditProduct(p); setShowProductForm(true); }}>
-                  {p.image_url ? <img src={`${import.meta.env.VITE_BACKEND_URL}/storage/${p.image_url}`} alt="" className="w-full h-full object-cover" /> : <Package size={24} className="m-4 text-gray-300" />}
+                  {p.image_url ? <img src={imageUrl(p.image_url)} alt="" className="w-full h-full object-cover" /> : <Package size={24} className="m-4 text-gray-300" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between"><p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{p.name}</p><button onClick={() => handleDeleteProduct(p.id)} className="text-gray-300 hover:text-red-500 transition"><X size={14} /></button></div>
@@ -246,7 +240,6 @@ export default function AdminDashboardPage() {
           </>
         )}
 
-        {/* ===== BANNERS (Admin only) ===== */}
         {tab === 'banners' && isAdmin && (
           <>
             <div className="flex items-center justify-between mb-4"><h3 className="font-bold text-gray-900 dark:text-white">Kelola Banner</h3><button onClick={() => { setEditBanner(null); setShowBannerForm(true); }} className="flex items-center gap-2 px-4 py-2.5 bg-amber-600 text-white rounded-xl text-sm font-semibold hover:bg-amber-700 transition"><Plus size={16} /> Banner Baru</button></div>
@@ -257,7 +250,7 @@ export default function AdminDashboardPage() {
               <div key={b.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 flex items-center gap-4">
                  <div className="w-20 h-14 bg-gray-100 dark:bg-gray-700 rounded-lg flex-shrink-0 overflow-hidden">
                    {b.image_url
-                     ? <img src={`${import.meta.env.VITE_BACKEND_URL}/storage/${b.image_url}`} alt={b.title} className="w-full h-full object-cover" />
+                                           ? <img src={imageUrl(b.image_url)} alt={b.title} className="w-full h-full object-cover" />
                      : <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">No Img</div>
                    }
                  </div>
@@ -272,7 +265,6 @@ export default function AdminDashboardPage() {
   );
 }
 
-/* Banner Form sub-component */
 function BannerFormModal({ banner, onSave, onCancel }) {
   const [title, setTitle] = useState(banner?.title || '');
   const [subtitle, setSubtitle] = useState(banner?.subtitle || '');
@@ -281,7 +273,7 @@ function BannerFormModal({ banner, onSave, onCancel }) {
   const [isActive, setIsActive] = useState(banner?.is_active ?? true);
   const [expiresAt, setExpiresAt] = useState(banner?.expires_at ? banner.expires_at.slice(0, 16) : '');
   const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(banner?.image_url ? `${import.meta.env.VITE_BACKEND_URL}/storage/${banner.image_url}` : null);
+  const [imagePreview, setImagePreview] = useState(banner?.image_url ? imageUrl(banner.image_url) : null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -344,7 +336,6 @@ function BannerFormModal({ banner, onSave, onCancel }) {
           <input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)} className={inp} />
         </div>
 
-        {/* Image Dropzone */}
         <div className="md:col-span-2">
           <label className={lbl}>Gambar Banner</label>
           {imagePreview ? (
@@ -368,7 +359,7 @@ function BannerFormModal({ banner, onSave, onCancel }) {
         <div className="flex items-end mb-1">
           <label className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition ${isActive ? 'border-green-500/50 bg-green-50 dark:bg-green-900/10' : 'border-gray-200 dark:border-gray-600'}`}>
             <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="accent-amber-600 w-4 h-4" />
-            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{isActive ? '✅ Active — Banner ditampilkan' : '⏸️ Inactive — Banner disembunyikan'}</span>
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{isActive ? 'Active — Banner ditampilkan' : 'Inactive — Banner disembunyikan'}</span>
           </label>
         </div>
 

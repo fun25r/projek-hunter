@@ -15,6 +15,7 @@ class Order extends Model
         'payment_method', 'payment_status', 'order_status',
         'xendit_invoice_id', 'xendit_invoice_url', 'xendit_expires_at',
         'midtrans_transaction_id', 'midtrans_payment_type', 'midtrans_transaction_status',
+        'midtrans_snap_token', 'midtrans_redirect_url',
         'resi_number', 'tracking_status',
         'ready_at', 'picked_up_at', 'auto_cancel_at',
     ];

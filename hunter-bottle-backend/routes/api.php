@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\WebhookController;
 use App\Models\Banner;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // =============================================
@@ -21,30 +22,29 @@ Route::get('/banners', function () {
     );
 });
 
-Route::get('/shipping/provinces', [ShippingController::class, 'provinces']);
-Route::get('/shipping/cities', [ShippingController::class, 'cities']);
-Route::get('/shipping/subdistricts', [ShippingController::class, 'subdistricts']);
-Route::post('/shipping/cost', [ShippingController::class, 'cost']);
+// Shipping — Biteship-based (format response mirip RajaOngkir)
+Route::post('/shipping/cost', [OrderController::class, 'getInstantShippingCost']);
 
+// Order
 Route::post('/orders', [OrderController::class, 'store']);
 Route::get('/orders/{orderNumber}', [OrderController::class, 'show']);
 Route::post('/orders/snap-token', [OrderController::class, 'getSnapToken']);
 
-// Public tracking — tanpa login
+// Public tracking
 Route::get('/orders/track/{orderNumber}', [OrderController::class, 'track']);
 
 // Webhooks
-Route::post('/webhooks/xendit', [WebhookController::class, 'xendit']);
 Route::post('/webhooks/midtrans', [WebhookController::class, 'midtrans']);
+Route::post('/webhooks/xendit', [WebhookController::class, 'xendit']);
 
 // =============================================
 // ADMIN AUTH
 // =============================================
 
-Route::post('/admin/login', [\App\Http\Controllers\Admin\AuthController::class, 'login']);
+Route::match(['get', 'post'], '/admin/login', [\App\Http\Controllers\Admin\AuthController::class, 'login']);
 
 // =============================================
-// ADMIN PROTECTED ROUTES
+// ADMIN PROTECTED ROUTES (auth:sanctum + admin middleware)
 // =============================================
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
@@ -59,10 +59,10 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/products/{id}', [\App\Http\Controllers\Admin\ProductController::class, 'update']);
     Route::delete('/admin/products/{id}', [\App\Http\Controllers\Admin\ProductController::class, 'destroy']);
 
-    // Product Tags — toggle new_collection / bestseller
-    Route::patch('/admin/products/{product}/tags', function (\App\Models\Product $product, \Illuminate\Http\Request $request) {
+    // Product Tags
+    Route::patch('/admin/products/{product}/tags', function (\App\Models\Product $product, Request $request) {
         $request->validate(['field' => 'required|in:is_new_collection,is_bestseller,is_featured']);
-        $product->update([$request->field => ! $product->{$request->field}]);
+        $product->update([$request->field => !$product->{$request->field}]);
         return response()->json(['message' => 'Tag updated', 'product' => $product->fresh()]);
     });
 
@@ -73,23 +73,12 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::put('/admin/banners/{banner}', [\App\Http\Controllers\Admin\BannerController::class, 'update']);
     Route::delete('/admin/banners/{banner}', [\App\Http\Controllers\Admin\BannerController::class, 'destroy']);
 
-    // Orders
-    Route::get('/admin/orders', function (\Illuminate\Http\Request $request) {
-        return response()->json(
-            \App\Models\Order::with('items')->latest()->paginate(20)
-        );
-    });
+    // Orders — Admin
+    Route::get('/admin/orders', [OrderController::class, 'adminOrders']);
+    Route::patch('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
 
-    Route::patch('/admin/orders/{order}/status', function (\App\Models\Order $order, \Illuminate\Http\Request $request) {
-        $request->validate([
-            'order_status' => 'required|in:pending,confirmed,processing,shipped,delivered,canceled',
-        ]);
-        $order->update(['order_status' => $request->order_status]);
-        return response()->json(['message' => 'Status updated', 'order' => $order->fresh()]);
-    });
-
-    // Admin — update resi & tracking status
-    Route::patch('/admin/orders/{order}/tracking', function (\App\Models\Order $order, \Illuminate\Http\Request $request) {
+    // Admin — update resi & tracking (closure untuk kompatibilitas)
+    Route::patch('/admin/orders/{order}/tracking', function (\App\Models\Order $order, Request $request) {
         $request->validate([
             'resi_number'     => 'nullable|string|max:50',
             'tracking_status' => 'nullable|string|max:50',
@@ -110,21 +99,24 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // Toggle item checklist
     Route::patch('/admin/orders/{order}/items/{item}/check', function (\App\Models\Order $order, \App\Models\OrderItem $item) {
         if ($item->order_id !== $order->id) return response()->json(['message' => 'Item tidak valid'], 400);
-        $item->update(['is_checked' => ! $item->is_checked]);
+        $item->update(['is_checked' => !$item->is_checked]);
         return response()->json(['message' => 'OK', 'item' => $item->fresh()]);
     });
 
     // Mark order as ready for pickup
     Route::patch('/admin/orders/{order}/mark-ready', function (\App\Models\Order $order) {
         $allChecked = $order->items()->where('is_checked', false)->count() === 0;
-        if (! $allChecked) return response()->json(['message' => 'Semua item harus dicentang terlebih dahulu'], 422);
+        if (!$allChecked) return response()->json(['message' => 'Semua item harus dicentang dahulu'], 422);
         $order->update([
-            'order_status' => 'delivered',
-            'ready_at'     => now(),
-            'auto_cancel_at'=> $order->payment_method === 'cod' ? now()->addHours(24) : null,
+            'order_status'   => 'delivered',
+            'ready_at'       => now(),
+            'auto_cancel_at' => $order->payment_method === 'cod' ? now()->addHours(24) : null,
         ]);
         return response()->json(['message' => 'Pesanan siap diambil', 'order' => $order->fresh()]);
     });
+
+    // Reports — Admin Sales Report
+    Route::get('/admin/reports', [OrderController::class, 'adminSalesReport']);
 
     // Analytics
     Route::get('/admin/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'dashboard']);
